@@ -1,17 +1,46 @@
-# Knee rehabilitation: IMU-only ML scaffold
+# Knee rehabilitation: IMU-only offline model training
 
-End-to-end **research scaffold** for an ESP32 knee-brace prototype. The primary
-supervised source is KneE-PAD; supplementary CSV data can be ingested using
-explicit mappings. The initial `data_loader.py` and `preprocess.py` are fully
-implemented, with runnable baselines, an optional compact CNN and int8 export.
-This is not a trained clinical model or a safety-certified device.
+Research pipeline for knee rehabilitation form assessment using KneE-PAD IMU
+data: verified release ingestion, preprocessing, subject-disjoint evaluation,
+and saved scikit-learn models. **Current scope is offline training and model
+storage, not embedded deployment.** This is not a clinical model or a
+safety-certified device.
 
-**Important limits:** source dataset releases have not been downloaded or their
-schemas verified. Manifest templates require real channel/rate/annotation
-mappings. Supplementary pretraining/domain adaptation is not implemented. Flash
-blob size is checked; actual ESP32 RAM, operator support, latency and quantized
-accuracy require measurements on your exact firmware. TensorFlow is optional and
-was not available in the initial development environment.
+The local `data/raw/dataset` release has 2,086 trials from 31 participants. Its
+48-channel layout, 148.14814814814815 Hz rate, units and nine source class IDs
+were checked against the [release metadata](https://zenodo.org/records/12112951)
+and [paper](https://doi.org/10.1038/s41597-025-04963-4). Separate squat, seated
+leg-extension and gait manifests preserve the two documented errors per task.
+Two gait files are empty and require explicit, recorded exclusion.
+
+**Important limits:** the reference models use all eight IMUs (48 channels),
+not a single-IMU knee brace. Use `--sensor-ids` to define a fixed subset and
+retrain/evaluate it separately. No injured-side swapping, mirroring or frame
+alignment is inferred. Generic manifest templates still need verified mappings
+for other releases. Supplementary pretraining/domain adaptation is not
+implemented. TensorFlow remains optional; embedded functionality is deferred.
+
+## Two-strap ESP32-C3 prototype
+
+For the above-knee / below-knee two-IMU hardware, start with
+[docs/TWO_STRAP_TEAM_GUIDE.md](docs/TWO_STRAP_TEAM_GUIDE.md). It covers wiring,
+SD logging, sensor placement, CSV format and the local browser interface.
+
+```bash
+# Run from project root; review-only, no hardware/model required:
+PYTHONPATH=src python -m knee_rehab.interface
+# Enable offline research predictions using a separately trained 12-channel model:
+PYTHONPATH=src python -m knee_rehab.interface \
+  --model-dir artifacts/knee_pad_extension_two_imu_rf_v1
+```
+
+Open `http://127.0.0.1:8080` and upload the SD recording. The example Arduino
+logger is `firmware/two_imu_logger/two_imu_logger.ino` (two **MPU6050** modules;
+change drivers for other IMUs). This is SD-to-computer review, not live medical
+feedback or on-ESP32 inference. Firmware hardware testing remains outstanding.
+The two-sensor models were genuinely retrained on thigh/shank source sensors,
+not padded to imitate eight sensors. Their performance is limited; see the
+team guide before interpreting any prediction.
 
 ## Directory layout
 
@@ -98,6 +127,73 @@ python -m knee_rehab.train \
 setting. Estimate a clinically acceptable operating point using inner,
 subject-disjoint validation and a separate outer/prospective evaluation. Do not
 tune a threshold on the held-out participant.
+
+## Train and store models from the local release
+
+The completed reference run and saved artifact paths are documented in
+[docs/TRAINING_RESULTS.md](docs/TRAINING_RESULTS.md), including the low recall
+at the illustrative 0.9 threshold and the source exclusions.
+
+Run from the project root. No TensorFlow, firmware, quantization, or target
+hardware is required for the random forest models. Pick new manifest/output
+paths if these already exist; the commands intentionally refuse overwrites.
+
+```bash
+# Build exercise-specific manifests; checks shapes, units and source SHA-256.
+for exercise in extension squat gait; do
+  python -m knee_rehab.knee_pad \
+    --dataset-dir data/raw/dataset --exercise "$exercise" --skip-empty \
+    --output "data/interim/knee_pad_${exercise}_all_imus.json"
+done
+
+# LOSO evaluation, followed by a final fit on all available subjects.
+for exercise in extension squat gait; do
+  python -m knee_rehab.train \
+    --manifest "data/interim/knee_pad_${exercise}_all_imus.json" \
+    --output-dir "artifacts/knee_pad_${exercise}_rf_v1" \
+    --model rf --correct-threshold 0.9
+done
+```
+
+`--skip-empty` only permits explicit exclusion of fewer-than-two-sample trials;
+NaN/Inf, unknown class folders and invalid channel layouts still fail. Excluded
+paths, shapes, reasons and hashes are retained in the manifest. The two empty
+files are `Subject_18/6/Trial_1/imu.npy` and `Subject_27/6/Trial_1/imu.npy`.
+Raw files are never modified. All eight fixed anatomical sensor placements are
+used by default. For a single fixed right rectus femoris IMU, build a **new**
+manifest with `--sensor-ids 1`; this is not automatically the injured leg.
+
+Each output directory stores:
+
+- `final.joblib`: final RF pipeline, fitted on all included subjects;
+- `cv_results.json`: held-out-subject and pooled raw/conservative results;
+- `metadata.json`: ordered channels, labels, preprocessing, window/subject
+  counts, skipped recordings, source hashes and Python/package versions;
+- `feature_config.json`, `feature_names.json`: exact feature mapping;
+- `input_manifest.json`: original mapping/provenance snapshot. Its relative
+  paths are anchored to the original `manifest_path` in metadata, not to the
+  snapshot's new directory; use the original manifest for replay.
+
+`artifacts/` and `data/interim/` are gitignored: keep a separate backup of model
+artifacts and manifests. Joblib files must only be loaded from trusted sources,
+using compatible package versions (recorded in metadata).
+
+### Reload for offline predictions
+
+```bash
+python -m knee_rehab.predict \
+  --model-dir artifacts/knee_pad_extension_rf_v1 \
+  --manifest data/interim/knee_pad_extension_all_imus.json \
+  --output artifacts/extension_predictions.json
+```
+
+This reuses saved preprocessing and checks channel compatibility. Predictions
+on the training manifest are a persistence/plumbing check, **not** a new test
+score; use `cv_results.json` for LOSO results. The exercise must already be known:
+these are three form models, not an automatic exercise recognizer. Gait has far
+fewer trials and missing class coverage per subject. A 0.9 rejection threshold
+is illustrative, not clinically validated; low false acceptance alone does not
+mean useful correct-form recall.
 
 ## Data loading and preprocessing APIs
 
@@ -206,7 +302,7 @@ as unbiased is invalid; add nested grouped selection or an independent
 prospective cohort. For multiple exercise types, also stratify errors by exercise
 and prevent exercise/dataset identity from becoming a proxy for form.
 
-After CV, the CLI fits a final model on **all supplied participants** for export.
+After CV, the CLI fits a final model on **all supplied participants** for storage.
 That fit is explicitly marked non-evaluation. Artifacts include the manifest
 snapshot/hash, class/channel mapping, preprocessing coefficients and metadata,
 CV results and `final.joblib` or `final.keras`. Do not load joblib artifacts from
@@ -221,10 +317,13 @@ python -m knee_rehab.train \
   --manifest configs/my_verified_knee_pad.json \
   --output-dir artifacts/knee_pad_cnn_v1 --model cnn \
   --epochs 15 --batch-size 32 --correct-threshold 0.9 \
-  --max-flash-bytes 262144 --calibration-windows 256
+  --export-int8 --max-flash-bytes 262144 --calibration-windows 256
 ```
 
-This trains all LOSO folds plus the final all-input model, then writes:
+Without `--export-int8`, CNN training only stores the Keras model, scaling,
+metadata and CV results. The explicit optional flag above additionally enables
+legacy edge export; it is outside the current offline-only scope. With the
+flag, training writes:
 
 - `final.keras`, `scaling.json`, `metadata.json`, `cv_results.json`;
 - `final.int8.tflite` with **int8 input/output** and integer-only converter ops;

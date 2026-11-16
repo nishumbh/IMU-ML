@@ -1,10 +1,60 @@
 # Dataset integration contract
 
-No dataset is downloaded, redistributed, or assumed to have a universal column
-layout. The files in `configs/` are **mapping templates, not verified source
+Raw datasets are not redistributed or assumed to have a universal layout.
+The files in `configs/` remain **mapping templates, not verified source
 schemas**: even the example 100 Hz rate, column numbers, units, sensor placement,
-and segment bounds must be replaced from the release documentation. This
-repository has not been validated against the actual releases.
+and segment bounds must be replaced from the release documentation.
+
+## Verified local KneE-PAD adapter
+
+`python -m knee_rehab.knee_pad` implements the specific numeric NPY release
+[10.5281/zenodo.12112951](https://doi.org/10.5281/zenodo.12112951), using its
+`metadata.txt` and the Data Records section / Tables 2 and 3 in Kasnesis et al.,
+*A Knee Rehabilitation Exercises Dataset for Postural Assessment using Wearable
+Devices*, Scientific Data (2025),
+[10.1038/s41597-025-04963-4](https://doi.org/10.1038/s41597-025-04963-4).
+Consult the source release for its applicable data license and attribution
+requirements; the article is CC BY 4.0. The adapter never downloads data.
+
+Verified mapping:
+
+- `Subject_<ID>/<class ID>/Trial_<ID>/imu.npy`, numeric `[48, time]` arrays.
+- IMU sampling rate: **148.14814814814815 Hz** (not the template's 100 Hz).
+- Per sensor: accelerometer X/Y/Z in g, then gyroscope X/Y/Z in deg/s.
+  Loader converts these to m/s² and rad/s; no EMG is selected.
+- Sensor IDs 1–4: right rectus femoris, hamstrings, tibialis anterior,
+  gastrocnemius. IDs 5–8: the corresponding left-side placements.
+- Original subject IDs are retained as globally scoped `knee_pad:P001`, etc.
+  Missing per-subject activities are expected; no classes are synthesized.
+
+| Exercise | Correct class | Error class 1 | Error class 2 |
+|---|---|---|---|
+| Squat | 0 | 1: weight transfer to healthy leg | 2: injured leg placed in front |
+| Seated leg extension | 3 | 4: incomplete extension | 5: limb lift from chair |
+| Gait | 6 | 7: incomplete knee extension | 8: hip abduction with extended knee |
+
+The source label is retained in every record's metadata. Each exercise gets a
+separate manifest/model, so no cross-exercise error taxonomy is fabricated.
+This is a source-aligned research label mapping, not clinical approval.
+Default selection is **all eight IMUs / 48 channels**. `--sensor-ids 1` selects
+only the fixed right rectus femoris IMU. Do not silently replace this with the
+injured side or a shank IMU. Reduced-sensor models require their own retraining
+and evaluation; the reference model makes no single-brace performance claim.
+
+The uploaded data has 2,086 IMU trials. Two are empty (`[48, 0]`):
+`Subject_18/6/Trial_1/imu.npy` and `Subject_27/6/Trial_1/imu.npy`. Default import
+fails; `--skip-empty` explicitly excludes and records these in `excluded_trials`
+with path, shape, reason and SHA-256. Other invalid layouts/nonfinite selected
+channels still fail. This leaves 914 extension, 1,075 squat and 95 gait trials
+before window-length checks. Every selected source file is hashed, and hashes
+are retained in the manifest and training metadata. Training records skipped
+because they cannot produce a full window are listed in `metadata.json`.
+
+Manifests contain paths relative to their original location. An archived
+`input_manifest.json` is an exact provenance snapshot, not a rebased runnable
+manifest; `metadata.json` records its original location and hash. Keep that
+original manifest location when replaying training, or explicitly rebase the
+paths when relocating data. See the README for generation/training commands.
 
 ## Sources and intended use
 

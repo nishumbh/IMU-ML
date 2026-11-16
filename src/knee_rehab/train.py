@@ -5,6 +5,9 @@ import hashlib
 import json
 from pathlib import Path
 import shutil
+import platform
+from importlib.metadata import version, PackageNotFoundError
+from collections import Counter
 
 import joblib
 import numpy as np
@@ -32,9 +35,13 @@ def main(argv=None):
     parser.add_argument("--overlap", type=float, default=0.5)
     parser.add_argument("--epochs", type=int, default=15)
     parser.add_argument("--batch-size", type=int, default=32)
+    parser.add_argument("--export-int8", action="store_true",
+                        help="Opt in to embedded int8 export (CNN only); default saves model only")
     parser.add_argument("--max-flash-bytes", type=int, default=262144)
     parser.add_argument("--calibration-windows", type=int, default=256)
     args = parser.parse_args(argv)
+    if args.export_int8 and args.model != "cnn":
+        parser.error("--export-int8 requires --model cnn")
     if args.output_dir.exists() and any(p.name != ".gitkeep" for p in args.output_dir.iterdir()):
         parser.error("--output-dir must be new or empty; use a separate directory per run to avoid stale artifacts")
     if args.correct_threshold is not None and not 0 <= args.correct_threshold <= 1:
@@ -70,7 +77,17 @@ def main(argv=None):
     snapshot = output / ("input_manifest" + args.manifest.suffix)
     if snapshot.resolve() != args.manifest.resolve():
         shutil.copyfile(args.manifest, snapshot)
+    packages = {}
+    for package in ("numpy", "scipy", "pandas", "scikit-learn", "joblib", "tensorflow"):
+        try:
+            packages[package] = version(package)
+        except PackageNotFoundError:
+            pass
+    window_counts = Counter(map(str, batch.recording_ids))
     metadata = {
+        "artifact_schema_version": 1,
+        "environment": {"python": platform.python_version(), "packages": packages},
+        "embedded_export_requested": args.export_int8,
         "model": args.model, "seed": args.seed, "preprocessing": asdict(config),
         "filter_sos": butter(config.filter_order, config.cutoff_hz, fs=config.target_rate_hz,
                              btype="lowpass", output="sos").tolist(),
@@ -86,10 +103,14 @@ def main(argv=None):
         "channel_names": list(batch.channel_names), "sample_rate_hz": batch.sample_rate_hz,
         "window_shape": list(X.shape[1:]), "window_count": len(X),
         "subjects": sorted(set(subjects)),
+        "window_counts_by_label": dict(Counter(map(str, y))),
+        "window_counts_by_subject": dict(Counter(map(str, subjects))),
+        "skipped_recording_ids": [r.recording_id for r in recordings if r.recording_id not in window_counts],
         "recordings": [{"recording_id": r.recording_id, "subject_id": r.subject_id,
                         "dataset": r.dataset, "label": r.label,
                         "source_path": str(r.source_path), "sample_rate_hz": r.sample_rate_hz,
-                        "channel_names": list(r.channel_names), "metadata": r.metadata}
+                        "channel_names": list(r.channel_names), "window_count": window_counts[r.recording_id],
+                        "metadata": r.metadata}
                        for r in recordings],
         "evaluation_limitations": EVALUATION_LIMITATIONS,
         "supplementary_pretraining": "Not implemented; supervised rehab-only manifest required",
@@ -125,7 +146,7 @@ def main(argv=None):
         write_json(output / "scaling.json", scaling)
     report["limitations"] = EVALUATION_LIMITATIONS
     write_json(output / "cv_results.json", report)
-    if args.model == "cnn":
+    if args.model == "cnn" and args.export_int8:
         from .export import export_int8
         export_int8(model, X, scaling, output / "final.int8.tflite", args.max_flash_bytes,
                     args.calibration_windows, args.seed)

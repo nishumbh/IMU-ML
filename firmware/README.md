@@ -1,10 +1,21 @@
-# ESP32 deployment acceptance (not implemented firmware)
+# ESP32 acquisition template and future inference acceptance
+
+A basic **two-MPU6050 + SPI SD** acquisition sketch is now provided at
+[`two_imu_logger/two_imu_logger.ino`](two_imu_logger/two_imu_logger.ino).
+See [the teammate guide](../docs/TWO_STRAP_TEAM_GUIDE.md) for configuration,
+example wiring, SD workflow and the computer-hosted review interface. It is
+an unverified hardware template, not embedded ML inference or clinical feedback.
+
+The following acceptance notes concern **future on-device inference**, not the
+current SD-to-computer prototype.
 
 Do not treat a small `.tflite` file as evidence that a model fits RAM or is safe
 for rehabilitation. ESP32 variants, PSRAM, SDK options, SD drivers, DMA, FreeRTOS,
 Bluetooth/Wi-Fi and TFLM kernels change usable memory substantially. The exporter
 marks every new model `deployment_ready: false` until separate verification.
-No MCU firmware or physical hardware test is included in this repository.
+No on-device inference implementation or physical hardware test is included
+in this repository; the logger sketch still needs compilation and bench tests
+on your exact board and sensor modules.
 
 ## Reproduce the Python numerical contract
 
