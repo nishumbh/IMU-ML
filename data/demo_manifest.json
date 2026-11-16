@@ -1,0 +1,629 @@
+{
+  "channel_names": [
+    "thigh_acc_x",
+    "thigh_acc_y",
+    "thigh_acc_z",
+    "thigh_gyro_x",
+    "thigh_gyro_y",
+    "thigh_gyro_z"
+  ],
+  "allowed_labels": [
+    "Correct Form",
+    "Incomplete Flexion",
+    "Incorrect Compensation"
+  ],
+  "records": [
+    {
+      "dataset": "SYNTHETIC_ONLY",
+      "subject_id": "synthetic_p0",
+      "recording_id": "synthetic_p0_class0",
+      "label": "Correct Form",
+      "format": "npy",
+      "path": "raw/synthetic/synthetic_p0_class0.npy",
+      "sample_rate_hz": 100,
+      "metadata": {
+        "synthetic": true,
+        "exercise": "synthetic_oscillation"
+      },
+      "channels": [
+        {
+          "name": "thigh_acc_x",
+          "column": 0,
+          "kind": "accelerometer",
+          "unit": "m/s^2"
+        },
+        {
+          "name": "thigh_acc_y",
+          "column": 1,
+          "kind": "accelerometer",
+          "unit": "m/s^2"
+        },
+        {
+          "name": "thigh_acc_z",
+          "column": 2,
+          "kind": "accelerometer",
+          "unit": "m/s^2"
+        },
+        {
+          "name": "thigh_gyro_x",
+          "column": 3,
+          "kind": "gyroscope",
+          "unit": "rad/s"
+        },
+        {
+          "name": "thigh_gyro_y",
+          "column": 4,
+          "kind": "gyroscope",
+          "unit": "rad/s"
+        },
+        {
+          "name": "thigh_gyro_z",
+          "column": 5,
+          "kind": "gyroscope",
+          "unit": "rad/s"
+        }
+      ]
+    },
+    {
+      "dataset": "SYNTHETIC_ONLY",
+      "subject_id": "synthetic_p0",
+      "recording_id": "synthetic_p0_class1",
+      "label": "Incomplete Flexion",
+      "format": "npy",
+      "path": "raw/synthetic/synthetic_p0_class1.npy",
+      "sample_rate_hz": 100,
+      "metadata": {
+        "synthetic": true,
+        "exercise": "synthetic_oscillation"
+      },
+      "channels": [
+        {
+          "name": "thigh_acc_x",
+          "column": 0,
+          "kind": "accelerometer",
+          "unit": "m/s^2"
+        },
+        {
+          "name": "thigh_acc_y",
+          "column": 1,
+          "kind": "accelerometer",
+          "unit": "m/s^2"
+        },
+        {
+          "name": "thigh_acc_z",
+          "column": 2,
+          "kind": "accelerometer",
+          "unit": "m/s^2"
+        },
+        {
+          "name": "thigh_gyro_x",
+          "column": 3,
+          "kind": "gyroscope",
+          "unit": "rad/s"
+        },
+        {
+          "name": "thigh_gyro_y",
+          "column": 4,
+          "kind": "gyroscope",
+          "unit": "rad/s"
+        },
+        {
+          "name": "thigh_gyro_z",
+          "column": 5,
+          "kind": "gyroscope",
+          "unit": "rad/s"
+        }
+      ]
+    },
+    {
+      "dataset": "SYNTHETIC_ONLY",
+      "subject_id": "synthetic_p0",
+      "recording_id": "synthetic_p0_class2",
+      "label": "Incorrect Compensation",
+      "format": "npy",
+      "path": "raw/synthetic/synthetic_p0_class2.npy",
+      "sample_rate_hz": 100,
+      "metadata": {
+        "synthetic": true,
+        "exercise": "synthetic_oscillation"
+      },
+      "channels": [
+        {
+          "name": "thigh_acc_x",
+          "column": 0,
+          "kind": "accelerometer",
+          "unit": "m/s^2"
+        },
+        {
+          "name": "thigh_acc_y",
+          "column": 1,
+          "kind": "accelerometer",
+          "unit": "m/s^2"
+        },
+        {
+          "name": "thigh_acc_z",
+          "column": 2,
+          "kind": "accelerometer",
+          "unit": "m/s^2"
+        },
+        {
+          "name": "thigh_gyro_x",
+          "column": 3,
+          "kind": "gyroscope",
+          "unit": "rad/s"
+        },
+        {
+          "name": "thigh_gyro_y",
+          "column": 4,
+          "kind": "gyroscope",
+          "unit": "rad/s"
+        },
+        {
+          "name": "thigh_gyro_z",
+          "column": 5,
+          "kind": "gyroscope",
+          "unit": "rad/s"
+        }
+      ]
+    },
+    {
+      "dataset": "SYNTHETIC_ONLY",
+      "subject_id": "synthetic_p1",
+      "recording_id": "synthetic_p1_class0",
+      "label": "Correct Form",
+      "format": "csv",
+      "path": "raw/synthetic/synthetic_p1_class0.csv",
+      "sample_rate_hz": 60,
+      "metadata": {
+        "synthetic": true,
+        "exercise": "synthetic_oscillation"
+      },
+      "channels": [
+        {
+          "name": "thigh_acc_x",
+          "column": "thigh_acc_x",
+          "kind": "accelerometer",
+          "unit": "m/s^2"
+        },
+        {
+          "name": "thigh_acc_y",
+          "column": "thigh_acc_y",
+          "kind": "accelerometer",
+          "unit": "m/s^2"
+        },
+        {
+          "name": "thigh_acc_z",
+          "column": "thigh_acc_z",
+          "kind": "accelerometer",
+          "unit": "m/s^2"
+        },
+        {
+          "name": "thigh_gyro_x",
+          "column": "thigh_gyro_x",
+          "kind": "gyroscope",
+          "unit": "rad/s"
+        },
+        {
+          "name": "thigh_gyro_y",
+          "column": "thigh_gyro_y",
+          "kind": "gyroscope",
+          "unit": "rad/s"
+        },
+        {
+          "name": "thigh_gyro_z",
+          "column": "thigh_gyro_z",
+          "kind": "gyroscope",
+          "unit": "rad/s"
+        }
+      ]
+    },
+    {
+      "dataset": "SYNTHETIC_ONLY",
+      "subject_id": "synthetic_p1",
+      "recording_id": "synthetic_p1_class1",
+      "label": "Incomplete Flexion",
+      "format": "csv",
+      "path": "raw/synthetic/synthetic_p1_class1.csv",
+      "sample_rate_hz": 60,
+      "metadata": {
+        "synthetic": true,
+        "exercise": "synthetic_oscillation"
+      },
+      "channels": [
+        {
+          "name": "thigh_acc_x",
+          "column": "thigh_acc_x",
+          "kind": "accelerometer",
+          "unit": "m/s^2"
+        },
+        {
+          "name": "thigh_acc_y",
+          "column": "thigh_acc_y",
+          "kind": "accelerometer",
+          "unit": "m/s^2"
+        },
+        {
+          "name": "thigh_acc_z",
+          "column": "thigh_acc_z",
+          "kind": "accelerometer",
+          "unit": "m/s^2"
+        },
+        {
+          "name": "thigh_gyro_x",
+          "column": "thigh_gyro_x",
+          "kind": "gyroscope",
+          "unit": "rad/s"
+        },
+        {
+          "name": "thigh_gyro_y",
+          "column": "thigh_gyro_y",
+          "kind": "gyroscope",
+          "unit": "rad/s"
+        },
+        {
+          "name": "thigh_gyro_z",
+          "column": "thigh_gyro_z",
+          "kind": "gyroscope",
+          "unit": "rad/s"
+        }
+      ]
+    },
+    {
+      "dataset": "SYNTHETIC_ONLY",
+      "subject_id": "synthetic_p1",
+      "recording_id": "synthetic_p1_class2",
+      "label": "Incorrect Compensation",
+      "format": "csv",
+      "path": "raw/synthetic/synthetic_p1_class2.csv",
+      "sample_rate_hz": 60,
+      "metadata": {
+        "synthetic": true,
+        "exercise": "synthetic_oscillation"
+      },
+      "channels": [
+        {
+          "name": "thigh_acc_x",
+          "column": "thigh_acc_x",
+          "kind": "accelerometer",
+          "unit": "m/s^2"
+        },
+        {
+          "name": "thigh_acc_y",
+          "column": "thigh_acc_y",
+          "kind": "accelerometer",
+          "unit": "m/s^2"
+        },
+        {
+          "name": "thigh_acc_z",
+          "column": "thigh_acc_z",
+          "kind": "accelerometer",
+          "unit": "m/s^2"
+        },
+        {
+          "name": "thigh_gyro_x",
+          "column": "thigh_gyro_x",
+          "kind": "gyroscope",
+          "unit": "rad/s"
+        },
+        {
+          "name": "thigh_gyro_y",
+          "column": "thigh_gyro_y",
+          "kind": "gyroscope",
+          "unit": "rad/s"
+        },
+        {
+          "name": "thigh_gyro_z",
+          "column": "thigh_gyro_z",
+          "kind": "gyroscope",
+          "unit": "rad/s"
+        }
+      ]
+    },
+    {
+      "dataset": "SYNTHETIC_ONLY",
+      "subject_id": "synthetic_p2",
+      "recording_id": "synthetic_p2_class0",
+      "label": "Correct Form",
+      "format": "npy",
+      "path": "raw/synthetic/synthetic_p2_class0.npy",
+      "sample_rate_hz": 100,
+      "metadata": {
+        "synthetic": true,
+        "exercise": "synthetic_oscillation"
+      },
+      "channels": [
+        {
+          "name": "thigh_acc_x",
+          "column": 0,
+          "kind": "accelerometer",
+          "unit": "m/s^2"
+        },
+        {
+          "name": "thigh_acc_y",
+          "column": 1,
+          "kind": "accelerometer",
+          "unit": "m/s^2"
+        },
+        {
+          "name": "thigh_acc_z",
+          "column": 2,
+          "kind": "accelerometer",
+          "unit": "m/s^2"
+        },
+        {
+          "name": "thigh_gyro_x",
+          "column": 3,
+          "kind": "gyroscope",
+          "unit": "rad/s"
+        },
+        {
+          "name": "thigh_gyro_y",
+          "column": 4,
+          "kind": "gyroscope",
+          "unit": "rad/s"
+        },
+        {
+          "name": "thigh_gyro_z",
+          "column": 5,
+          "kind": "gyroscope",
+          "unit": "rad/s"
+        }
+      ]
+    },
+    {
+      "dataset": "SYNTHETIC_ONLY",
+      "subject_id": "synthetic_p2",
+      "recording_id": "synthetic_p2_class1",
+      "label": "Incomplete Flexion",
+      "format": "npy",
+      "path": "raw/synthetic/synthetic_p2_class1.npy",
+      "sample_rate_hz": 100,
+      "metadata": {
+        "synthetic": true,
+        "exercise": "synthetic_oscillation"
+      },
+      "channels": [
+        {
+          "name": "thigh_acc_x",
+          "column": 0,
+          "kind": "accelerometer",
+          "unit": "m/s^2"
+        },
+        {
+          "name": "thigh_acc_y",
+          "column": 1,
+          "kind": "accelerometer",
+          "unit": "m/s^2"
+        },
+        {
+          "name": "thigh_acc_z",
+          "column": 2,
+          "kind": "accelerometer",
+          "unit": "m/s^2"
+        },
+        {
+          "name": "thigh_gyro_x",
+          "column": 3,
+          "kind": "gyroscope",
+          "unit": "rad/s"
+        },
+        {
+          "name": "thigh_gyro_y",
+          "column": 4,
+          "kind": "gyroscope",
+          "unit": "rad/s"
+        },
+        {
+          "name": "thigh_gyro_z",
+          "column": 5,
+          "kind": "gyroscope",
+          "unit": "rad/s"
+        }
+      ]
+    },
+    {
+      "dataset": "SYNTHETIC_ONLY",
+      "subject_id": "synthetic_p2",
+      "recording_id": "synthetic_p2_class2",
+      "label": "Incorrect Compensation",
+      "format": "npy",
+      "path": "raw/synthetic/synthetic_p2_class2.npy",
+      "sample_rate_hz": 100,
+      "metadata": {
+        "synthetic": true,
+        "exercise": "synthetic_oscillation"
+      },
+      "channels": [
+        {
+          "name": "thigh_acc_x",
+          "column": 0,
+          "kind": "accelerometer",
+          "unit": "m/s^2"
+        },
+        {
+          "name": "thigh_acc_y",
+          "column": 1,
+          "kind": "accelerometer",
+          "unit": "m/s^2"
+        },
+        {
+          "name": "thigh_acc_z",
+          "column": 2,
+          "kind": "accelerometer",
+          "unit": "m/s^2"
+        },
+        {
+          "name": "thigh_gyro_x",
+          "column": 3,
+          "kind": "gyroscope",
+          "unit": "rad/s"
+        },
+        {
+          "name": "thigh_gyro_y",
+          "column": 4,
+          "kind": "gyroscope",
+          "unit": "rad/s"
+        },
+        {
+          "name": "thigh_gyro_z",
+          "column": 5,
+          "kind": "gyroscope",
+          "unit": "rad/s"
+        }
+      ]
+    },
+    {
+      "dataset": "SYNTHETIC_ONLY",
+      "subject_id": "synthetic_p3",
+      "recording_id": "synthetic_p3_class0",
+      "label": "Correct Form",
+      "format": "csv",
+      "path": "raw/synthetic/synthetic_p3_class0.csv",
+      "sample_rate_hz": 60,
+      "metadata": {
+        "synthetic": true,
+        "exercise": "synthetic_oscillation"
+      },
+      "channels": [
+        {
+          "name": "thigh_acc_x",
+          "column": "thigh_acc_x",
+          "kind": "accelerometer",
+          "unit": "m/s^2"
+        },
+        {
+          "name": "thigh_acc_y",
+          "column": "thigh_acc_y",
+          "kind": "accelerometer",
+          "unit": "m/s^2"
+        },
+        {
+          "name": "thigh_acc_z",
+          "column": "thigh_acc_z",
+          "kind": "accelerometer",
+          "unit": "m/s^2"
+        },
+        {
+          "name": "thigh_gyro_x",
+          "column": "thigh_gyro_x",
+          "kind": "gyroscope",
+          "unit": "rad/s"
+        },
+        {
+          "name": "thigh_gyro_y",
+          "column": "thigh_gyro_y",
+          "kind": "gyroscope",
+          "unit": "rad/s"
+        },
+        {
+          "name": "thigh_gyro_z",
+          "column": "thigh_gyro_z",
+          "kind": "gyroscope",
+          "unit": "rad/s"
+        }
+      ]
+    },
+    {
+      "dataset": "SYNTHETIC_ONLY",
+      "subject_id": "synthetic_p3",
+      "recording_id": "synthetic_p3_class1",
+      "label": "Incomplete Flexion",
+      "format": "csv",
+      "path": "raw/synthetic/synthetic_p3_class1.csv",
+      "sample_rate_hz": 60,
+      "metadata": {
+        "synthetic": true,
+        "exercise": "synthetic_oscillation"
+      },
+      "channels": [
+        {
+          "name": "thigh_acc_x",
+          "column": "thigh_acc_x",
+          "kind": "accelerometer",
+          "unit": "m/s^2"
+        },
+        {
+          "name": "thigh_acc_y",
+          "column": "thigh_acc_y",
+          "kind": "accelerometer",
+          "unit": "m/s^2"
+        },
+        {
+          "name": "thigh_acc_z",
+          "column": "thigh_acc_z",
+          "kind": "accelerometer",
+          "unit": "m/s^2"
+        },
+        {
+          "name": "thigh_gyro_x",
+          "column": "thigh_gyro_x",
+          "kind": "gyroscope",
+          "unit": "rad/s"
+        },
+        {
+          "name": "thigh_gyro_y",
+          "column": "thigh_gyro_y",
+          "kind": "gyroscope",
+          "unit": "rad/s"
+        },
+        {
+          "name": "thigh_gyro_z",
+          "column": "thigh_gyro_z",
+          "kind": "gyroscope",
+          "unit": "rad/s"
+        }
+      ]
+    },
+    {
+      "dataset": "SYNTHETIC_ONLY",
+      "subject_id": "synthetic_p3",
+      "recording_id": "synthetic_p3_class2",
+      "label": "Incorrect Compensation",
+      "format": "csv",
+      "path": "raw/synthetic/synthetic_p3_class2.csv",
+      "sample_rate_hz": 60,
+      "metadata": {
+        "synthetic": true,
+        "exercise": "synthetic_oscillation"
+      },
+      "channels": [
+        {
+          "name": "thigh_acc_x",
+          "column": "thigh_acc_x",
+          "kind": "accelerometer",
+          "unit": "m/s^2"
+        },
+        {
+          "name": "thigh_acc_y",
+          "column": "thigh_acc_y",
+          "kind": "accelerometer",
+          "unit": "m/s^2"
+        },
+        {
+          "name": "thigh_acc_z",
+          "column": "thigh_acc_z",
+          "kind": "accelerometer",
+          "unit": "m/s^2"
+        },
+        {
+          "name": "thigh_gyro_x",
+          "column": "thigh_gyro_x",
+          "kind": "gyroscope",
+          "unit": "rad/s"
+        },
+        {
+          "name": "thigh_gyro_y",
+          "column": "thigh_gyro_y",
+          "kind": "gyroscope",
+          "unit": "rad/s"
+        },
+        {
+          "name": "thigh_gyro_z",
+          "column": "thigh_gyro_z",
+          "kind": "gyroscope",
+          "unit": "rad/s"
+        }
+      ]
+    }
+  ]
+}

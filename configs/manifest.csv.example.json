@@ -1,0 +1,24 @@
+{
+  "records": [
+    {
+      "dataset": "bliss",
+      "recording_id": "REPLACE_WITH_REAL_TRIAL_ID",
+      "subject_id": "REPLACE_WITH_REAL_PARTICIPANT_ID",
+      "path": "../data/raw/bliss/REPLACE_WITH_REAL_FILE.csv",
+      "format": "csv",
+      "csv_options": {"sep": ",", "header": 0},
+      "sample_rate_hz": 100,
+      "label": "Unassessed Gait",
+      "metadata": {"usage": "pretraining_only", "mapping_verified": false},
+      "timestamps": {"column": "time", "unit": "s", "relative_tolerance": 0.05},
+      "channels": [
+        {"name": "thigh_acc_x", "column": "acc_x", "kind": "accelerometer", "unit": "g"},
+        {"name": "thigh_acc_y", "column": "acc_y", "kind": "accelerometer", "unit": "g"},
+        {"name": "thigh_acc_z", "column": "acc_z", "kind": "accelerometer", "unit": "g"},
+        {"name": "thigh_gyro_x", "column": "gyro_x", "kind": "gyroscope", "unit": "deg/s"},
+        {"name": "thigh_gyro_y", "column": "gyro_y", "kind": "gyroscope", "unit": "deg/s"},
+        {"name": "thigh_gyro_z", "column": "gyro_z", "kind": "gyroscope", "unit": "deg/s"}
+      ]
+    }
+  ]
+}

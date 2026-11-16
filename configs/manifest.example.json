@@ -1,0 +1,27 @@
+{
+  "channel_names": ["thigh_acc_x", "thigh_acc_y", "thigh_acc_z", "thigh_gyro_x", "thigh_gyro_y", "thigh_gyro_z"],
+  "allowed_labels": ["Correct Form", "Incomplete Flexion", "Incorrect Compensation"],
+  "records": [
+    {
+      "dataset": "knee_pad",
+      "recording_id": "REPLACE_WITH_REAL_TRIAL_ID",
+      "subject_id": "REPLACE_WITH_REAL_PARTICIPANT_ID",
+      "path": "../data/raw/knee_pad/REPLACE_WITH_REAL_FILE.npy",
+      "format": "npy",
+      "time_axis": 0,
+      "sample_rate_hz": 100,
+      "sample_start": 0,
+      "sample_stop": 1000,
+      "label": "Correct Form",
+      "metadata": {"exercise": "squat", "original_label": "REPLACE_FROM_ANNOTATION", "mapping_verified": false},
+      "channels": [
+        {"name": "thigh_acc_x", "column": 0, "kind": "accelerometer", "unit": "m/s^2"},
+        {"name": "thigh_acc_y", "column": 1, "kind": "accelerometer", "unit": "m/s^2"},
+        {"name": "thigh_acc_z", "column": 2, "kind": "accelerometer", "unit": "m/s^2"},
+        {"name": "thigh_gyro_x", "column": 3, "kind": "gyroscope", "unit": "rad/s"},
+        {"name": "thigh_gyro_y", "column": 4, "kind": "gyroscope", "unit": "rad/s"},
+        {"name": "thigh_gyro_z", "column": 5, "kind": "gyroscope", "unit": "rad/s"}
+      ]
+    }
+  ]
+}

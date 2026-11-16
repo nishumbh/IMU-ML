@@ -1,0 +1,19 @@
+{
+  "target_board": "REPLACE_WITH_EXACT_ESP32_MODULE_AND_PSRAM_CONFIG",
+  "firmware_build_id": "REPLACE_WITH_BUILD_ID_AND_TFLM_REVISION",
+  "model_sha256": null,
+  "app_partition_bytes": null,
+  "firmware_image_bytes": null,
+  "available_internal_ram_bytes": null,
+  "static_internal_ram_bytes": null,
+  "peak_dynamic_internal_ram_bytes": null,
+  "ram_margin_bytes": null,
+  "tflm_arena_required_bytes": null,
+  "tflm_arena_reserved_bytes": null,
+  "latency_budget_ms": null,
+  "measured_worst_case_latency_ms": null,
+  "sd_logging_enabled": false,
+  "operators_verified": false,
+  "int8_accuracy_verified": false,
+  "allocation_verified": false
+}

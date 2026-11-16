@@ -1,0 +1,24 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "knee-rehab-ml"
+version = "0.1.0"
+description = "IMU-only knee rehabilitation ML research and edge deployment scaffold"
+requires-python = ">=3.10,<3.14"
+dynamic = ["dependencies"]
+
+[project.optional-dependencies]
+train = ["tensorflow>=2.16,<2.22"]
+dev = ["pytest>=8,<10"]
+
+[tool.setuptools.dynamic]
+dependencies = {file = ["requirements.txt"]}
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests"]
