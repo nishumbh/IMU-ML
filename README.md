@@ -22,6 +22,11 @@ implemented. TensorFlow remains optional; embedded functionality is deferred.
 
 ## Two-strap ESP32-C3 prototype
 
+For the **two-board MicroPython + ESP-NOW + master SD** implementation, see
+[`tech/iot/README.md`](tech/iot/README.md). It has hardcoded bench and provisioned
+OTA-capable iterations. Mechanical/electronics assets remain in `tech/designs/`.
+The older Arduino sketch below is a separate, single-board acquisition example.
+
 For the above-knee / below-knee two-IMU hardware, start with
 [docs/TWO_STRAP_TEAM_GUIDE.md](docs/TWO_STRAP_TEAM_GUIDE.md). It covers wiring,
 SD logging, sensor placement, CSV format and the local browser interface.
