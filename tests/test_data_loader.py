@@ -12,7 +12,7 @@ from knee_rehab.data_loader import load_manifest, load_recording
 class LoaderTests(unittest.TestCase):
     def setUp(self):
         self.temp = tempfile.TemporaryDirectory()
-        self.root = Path(self.temp.name)
+        self.root = Path(self.temp.name).resolve()
         self.values = np.column_stack([np.ones(20), np.full(20, 180), np.full(20, 999)])
         np.save(self.root / "imu.npy", self.values)
         self.spec = {
