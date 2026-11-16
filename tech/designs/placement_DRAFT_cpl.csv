@@ -1,0 +1,23 @@
+Designator,Val,Package,Mid X(mm),Mid Y(mm),Rotation,Layer
+U1,ESP32-C3-MINI-1,ESP32-C3-MINI-1 (13.2x16.6),3.0,7.0,0,Top
+J1,Micro-USB-B receptacle SMD,USB_Micro-B_SMD_5.6x7.5,16.7,0.0,0,Top
+J2,MicroSD push-push socket,microSD_14x15,-11.5,0.0,180,Top
+U2,LSM6DSO (6-axis IMU),LGA-14 2.5x3.0,4.0,-6.5,0,Top
+U3,TP4056 charger,SOP-8-EP 6.0x5.0,-2.5,-12.5,0,Top
+U4,HT7833 3.3V LDO,SOT-89 4.6x4.2,-11.0,-11.5,0,Top
+Q1,AO3401A P-MOSFET,SOT-23 3.0x2.6,4.5,-13.0,0,Top
+D1,B5819W Schottky,SOD-123 3.8x1.6,9.5,-12.0,0,Top
+D2,LED green 0603 (status),LED_0603,12.0,-8.0,0,Top
+J3,JST-SH 2P battery,SM02B-SRSS 4.2x3.0,-1.0,-5.0,0,Top
+R1,10k (RPROG ~120mA),0603,-6.5,-16.0,0,Top
+R2,1k LED,0603,12.0,-5.8,0,Top
+R3,100k Q1 gate pulldown,0603,8.0,-9.0,0,Top
+R4,10k EN pullup,0603,-1.5,-2.2,0,Top
+C1,10uF VBUS,0805,13.0,-12.0,0,Top
+C2,10uF BAT,0805,-7.2,-9.4,0,Top
+C3,10uF VSYS,0805,0.0,-16.0,0,Top
+C4,10uF 3V3,0805,-14.8,-9.5,0,Top
+C5,1uF EN/RC,0603,0.8,-2.2,0,Top
+C6,100nF IMU,0603,7.2,-6.5,0,Top
+C7,100nF 3V3,0603,7.0,-3.5,0,Top
+C8,1uF LDO in,0603,-9.0,-15.0,0,Top
