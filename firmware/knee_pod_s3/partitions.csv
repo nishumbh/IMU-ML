@@ -1,0 +1,7 @@
+# Name,     Type, SubType,  Offset,   Size,     Flags
+# Flash is 4 MB (ESP32-S3FH4R2). No OTA: no ota_0/ota_1/otadata, so the factory app boots.
+nvs,        data, nvs,      0x9000,   0x6000,
+phy_init,   data, phy,      0xF000,   0x1000,
+factory,    app,  factory,  0x10000,  0x300000,
+coredump,   data, coredump, 0x310000, 0x10000,
+spiffs,     data, spiffs,   0x320000, 0xE0000,
