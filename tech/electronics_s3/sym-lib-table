@@ -1,0 +1,4 @@
+(sym_lib_table
+  (version 7)
+  (lib (name "knee_s3")(type "KiCad")(uri "${KIPRJMOD}/parts_s3.kicad_sym")(options "")(descr "knee pod S3 block symbols"))
+)

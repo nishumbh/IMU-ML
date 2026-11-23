@@ -4,5 +4,6 @@ pandas>=2.1,<3
 scipy>=1.11,<2
 scikit-learn>=1.4,<2
 joblib>=1.3,<2
+cryptography>=42,<52
 # Optional CNN / TFLite: pip install -e '.[train]'
 # Tests: pip install -e '.[dev]'

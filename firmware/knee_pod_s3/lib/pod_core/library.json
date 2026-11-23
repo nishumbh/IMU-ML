@@ -1,0 +1,6 @@
+{
+  "name": "pod_core",
+  "version": "0.1.0",
+  "description": "Pure C packet, pairing, gate and ring logic for the knee pods (host-testable).",
+  "build": { "srcFilter": ["+<*>"], "flags": ["-I include"] }
+}

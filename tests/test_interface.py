@@ -1,4 +1,5 @@
 """Standard-library unittest coverage of local review and its HTTP boundary."""
+import base64
 import http.client
 import json
 from pathlib import Path
@@ -265,6 +266,91 @@ class HTTPTests(unittest.TestCase):
         self.assertIn("csv", json.loads(result)["error"])
         status, _ = self.raw(f"Content-Length: {len(body) + 1}\r\n".encode())
         self.assertEqual(status, 413)
+
+
+class KBXReviewTests(unittest.TestCase):
+    """Encrypted .kbx uploads decrypt in memory and get the same review as CSV."""
+    FIXTURES = Path(__file__).resolve().parent / "fixtures" / "kbx"
+    PASSPHRASE = "correct horse battery staple"
+
+    @classmethod
+    def encoded(cls, name="valid.kbx"):
+        return base64.b64encode((cls.FIXTURES / name).read_bytes()).decode("ascii")
+
+    def test_kbx_review_reports_same_schema_and_kbx_summary(self):
+        result = ui.review_request({"kbx": self.encoded(), "passphrase": self.PASSPHRASE})
+        self.assertEqual(result["review"]["samples"], 150)
+        self.assertEqual(result["review"]["sample_rate_hz"], 50)
+        self.assertEqual(result["review"]["label"], "Unassessed")
+        self.assertEqual(result["kbx"]["link_loss_samples"], 1)
+        self.assertEqual(result["kbx"]["unknown_records"], 1)
+        self.assertFalse(result["kbx"]["truncated"])
+        self.assertNotIn("research_prediction", result)
+        self.assertNotIn(self.PASSPHRASE, json.dumps(result))
+
+    def test_truncated_kbx_is_flagged_not_rejected(self):
+        result = ui.review_request({"kbx": self.encoded("truncated.kbx"), "passphrase": self.PASSPHRASE})
+        self.assertTrue(result["kbx"]["truncated"])
+        self.assertEqual(result["review"]["samples"], 150)
+
+    def test_kbx_errors_are_value_errors_with_clear_messages(self):
+        encoded = self.encoded()
+        cases = [
+            ({"kbx": encoded, "passphrase": "wrong passphrase value"}, "wrong passphrase"),
+            ({"kbx": encoded}, "passphrase is required"),
+            ({"kbx": encoded, "passphrase": ""}, "passphrase is required"),
+            ({"kbx": "!!! not base64", "passphrase": self.PASSPHRASE}, "base64"),
+            ({"kbx": encoded, "passphrase": self.PASSPHRASE, "sample_rate_hz": 100}, "header declares 50 Hz"),
+            ({"kbx": encoded, "csv": recording()}, "exactly one"),
+            ({"csv": recording(), "passphrase": self.PASSPHRASE}, "only used with kbx"),
+            ({"kbx": self.encoded("tampered.kbx"), "passphrase": self.PASSPHRASE}, "failed authentication"),
+            ({"kbx": base64.b64encode(b"KBX1" + bytes(100)).decode(), "passphrase": self.PASSPHRASE}, "format version"),
+            ({"kbx": base64.b64encode(bytes(ui.MAX_KBX_BYTES + 1)).decode(), "passphrase": self.PASSPHRASE}, "3.5 MiB"),
+            ({"kbx": encoded, "passphrase": self.PASSPHRASE, "predict": True}, "No model"),
+        ]
+        for payload, expected in cases:
+            with self.subTest(expected=expected), self.assertRaisesRegex(ValueError, expected):
+                ui.review_request(payload)
+
+    def test_http_kbx_upload_and_wrong_passphrase_without_echo(self):
+        server = ui.make_server(port=0)
+        thread = threading.Thread(target=server.serve_forever, daemon=True)
+        thread.start()
+        try:
+            def post(payload):
+                connection = http.client.HTTPConnection("127.0.0.1", server.server_port, timeout=10)
+                try:
+                    connection.request("POST", "/api/review", json.dumps(payload),
+                                       {"Content-Type": "application/json"})
+                    response = connection.getresponse()
+                    return response.status, response.read().decode("utf-8")
+                finally:
+                    connection.close()
+
+            status, body = post({"kbx": self.encoded(), "passphrase": self.PASSPHRASE})
+            self.assertEqual(status, 200)
+            self.assertEqual(json.loads(body)["review"]["samples"], 150)
+            status, body = post({"kbx": self.encoded(), "passphrase": "wrong passphrase value"})
+            self.assertEqual(status, 400)
+            self.assertIn("wrong passphrase", json.loads(body)["error"])
+            self.assertNotIn("wrong passphrase value", body)
+            _, page = self.get_page(server)
+            self.assertIn(b'type="password"', page)
+            self.assertIn(b".kbx", page)
+        finally:
+            server.shutdown()
+            server.server_close()
+            thread.join(timeout=3)
+
+    @staticmethod
+    def get_page(server):
+        connection = http.client.HTTPConnection("127.0.0.1", server.server_port, timeout=10)
+        try:
+            connection.request("GET", "/")
+            response = connection.getresponse()
+            return response.status, response.read()
+        finally:
+            connection.close()
 
 
 if __name__ == "__main__":

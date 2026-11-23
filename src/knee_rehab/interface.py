@@ -2,6 +2,8 @@
 from __future__ import annotations
 
 import argparse
+import base64
+import binascii
 from collections import Counter
 import csv
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
@@ -14,6 +16,8 @@ import statistics
 from tempfile import TemporaryDirectory
 
 MAX_BODY_BYTES = 5 * 1024 * 1024
+# Decoded .kbx limit. Base64 in JSON must still fit MAX_BODY_BYTES (3.5 MiB * 4/3 < 5 MiB).
+MAX_KBX_BYTES = 3 * 1024 * 1024 + 512 * 1024
 CSV_COLUMNS = ("time_ms",) + tuple(
     f"{sensor}_{kind}{axis}" for sensor in ("thigh", "shank")
     for kind in ("a", "g") for axis in "xyz")
@@ -29,7 +33,8 @@ LIMITATIONS = (
     "Uploaded recordings are Unassessed, never clinically correct targets. "
     "No imputation, channel tiling, eight-sensor fallback or fitting is performed. "
     "Uploads are not saved in the project; prediction uses temporary files deleted "
-    "after processing. Temporary storage and local HTTP are not encrypted. "
+    "after processing. Temporary storage and local HTTP are not encrypted; a .kbx "
+    "passphrase is sent over this local HTTP connection in plaintext and is not logged. "
     "Use only on a trusted local computer; this is not a multi-user service.")
 TRAIN_HELP = (
     "Train a compatible two-IMU model with fixed ordered right_rectus_femoris "
@@ -168,15 +173,63 @@ def research_prediction(text, review, model_dir):
                            "max": max(confidence) if confidence else None}}
 
 
+def kbx_to_csv(encoded, passphrase):
+    """Decrypt a base64 .kbx upload in memory; return (csv_text, header_rate, summary).
+
+    Uses secure_log (docs/SD_LOG_FORMAT.md). Errors are ValueError subclasses.
+    Nothing is written to disk.
+    """
+    from .secure_log import read_kbx_bytes, session_to_csv
+
+    if not isinstance(encoded, str):
+        raise ValueError("kbx must be base64 text.")
+    if len(encoded) > -(-MAX_KBX_BYTES // 3) * 4:
+        raise ValueError("kbx exceeds the 3.5 MiB limit; export a shorter session.")
+    try:
+        data = base64.b64decode(encoded, validate=True)
+    except (binascii.Error, ValueError) as exc:
+        raise ValueError("kbx must be valid base64.") from exc
+    if len(data) > MAX_KBX_BYTES:
+        raise ValueError("kbx exceeds the 3.5 MiB limit; export a shorter session.")
+    if not isinstance(passphrase, str) or not passphrase:
+        raise ValueError("A passphrase is required for .kbx files.")
+    session = read_kbx_bytes(data, passphrase)
+    if not session.verified:
+        raise ValueError("kbx has no authenticated chunks, so the passphrase cannot be verified.")
+    summary = {"session_number": session.header.session_number,
+               "sample_rate_hz": session.header.sample_rate_hz,
+               "chunks": session.chunks, "truncated": session.truncated,
+               "link_loss_samples": session.link_loss_samples,
+               "unknown_records": session.unknown_records}
+    return session_to_csv(session), session.header.sample_rate_hz, summary
+
+
 def review_request(payload, model_dir=None):
-    if not isinstance(payload, dict) or set(payload) - {"csv", "sample_rate_hz", "predict"}:
-        raise ValueError("Expected JSON object with only csv, sample_rate_hz and predict; paths are not accepted.")
+    allowed = {"csv", "kbx", "passphrase", "sample_rate_hz", "predict"}
+    if not isinstance(payload, dict) or set(payload) - allowed:
+        raise ValueError("Expected JSON object with only csv or kbx (kbx also needs passphrase), "
+                         "sample_rate_hz and predict; paths are not accepted.")
+    if ("csv" in payload) == ("kbx" in payload):
+        raise ValueError("Send exactly one of csv (CSV text) or kbx (base64 .kbx file).")
     if type(payload.get("predict", False)) is not bool:
         raise ValueError("predict must be a JSON boolean; research prediction requires explicit true.")
-    review = validate_csv(payload.get("csv"), payload.get("sample_rate_hz", 50))
+    extra = {}
+    if "kbx" in payload:
+        text, rate, extra = kbx_to_csv(payload["kbx"], payload.get("passphrase"))
+        requested = payload.get("sample_rate_hz", rate)
+        if isinstance(requested, bool) or not isinstance(requested, (int, float)) or float(requested) != rate:
+            raise ValueError(f".kbx header declares {rate} Hz; do not send a different sample_rate_hz.")
+        sample_rate = rate
+    else:
+        if "passphrase" in payload:
+            raise ValueError("passphrase is only used with kbx uploads.")
+        text, sample_rate = payload["csv"], payload.get("sample_rate_hz", 50)
+    review = validate_csv(text, sample_rate)
     response = {"review": review, "limitations": LIMITATIONS}
+    if extra:
+        response["kbx"] = extra
     if payload.get("predict", False):
-        response["research_prediction"] = research_prediction(payload["csv"], review, model_dir)
+        response["research_prediction"] = research_prediction(text, review, model_dir)
     return response
 
 HTML = """<!doctype html>
@@ -185,35 +238,53 @@ HTML = """<!doctype html>
 <style>body{font:16px system-ui;max-width:900px;margin:2em auto;padding:0 1em;background:#fafafa;color:#222}button,input{font:inherit;margin:.5em}pre{white-space:pre-wrap;overflow-wrap:anywhere;background:#eee;padding:1em}label{display:block}</style>
 <h1>Two-IMU research prototype</h1>
 <p><strong>Not clinical advice. No clinical assessment or guarantee.</strong></p>
-<p>Record/review only: use the ESP32 logger to record and stop a session, then copy its CSV from the SD card. Select the file and enter the logger's sampling rate. Review timestamps, signal statistics and quality issues. No exercise, treatment or movement instructions are provided.</p>
-<p>Exact ordered header (SI acceleration m/s^2, rotation rad/s; finite strictly increasing time_ms):</p>
+<p>Record/review only: use the ESP32 logger to record and stop a session, then copy its file from the SD card. Either choose the encrypted <code>S####.kbx</code> file and enter its passphrase (the file carries its own sampling rate), or choose a CSV and enter the logger's sampling rate. Review timestamps, signal statistics and quality issues. No exercise, treatment or movement instructions are provided.</p>
+<p>Exact ordered CSV header (SI acceleration m/s^2, rotation rad/s; finite strictly increasing time_ms; .kbx decrypts to the same header):</p>
 <pre id="schema"></pre><p id="limitations"></p>
-<label>ESP32 SD card CSV <input id="file" type="file" accept=".csv,text/csv"></label>
-<label>Sampling rate (Hz) <input id="rate" type="number" value="50" min="0.001" step="any"></label>
+<label>ESP32 SD card file (.kbx or .csv) <input id="file" type="file" accept=".kbx,.csv,text/csv"></label>
+<label>Passphrase (.kbx only) <input id="passphrase" type="password" autocomplete="off"></label>
+<label>Sampling rate (Hz, CSV only) <input id="rate" type="number" value="50" min="0.001" step="any"></label>
 <button id="review">Review signals only</button>
 <button id="predict">Explicit research prediction (optional)</button>
 <p>All uploaded data remain <strong>Unassessed</strong>. Model labels, including “Correct Form”, are research categories, not a clinical green light. Prediction is never automatic.</p>
-<pre id="output" role="status" aria-live="polite">Select a CSV to review.</pre>
+<pre id="output" role="status" aria-live="polite">Select a .kbx or .csv file to review.</pre>
 <script>
+const KBX_MAX=KBX_MAX_BYTES, CSV_MAX=5242880;
 document.getElementById('schema').textContent=SCHEMA_JSON;
 document.getElementById('limitations').textContent=LIMITATIONS_JSON;
+function toBase64(buffer){
+ const bytes=new Uint8Array(buffer);let binary='';
+ for(let i=0;i<bytes.length;i+=32768){binary+=String.fromCharCode.apply(null,bytes.subarray(i,i+32768));}
+ return btoa(binary);
+}
 async function submit(predict){
  const out=document.getElementById('output'), file=document.getElementById('file').files[0];
- if(!file){out.textContent='Select an ESP32 CSV first.';return;}
- if(file.size>5242880){out.textContent='File exceeds 5 MiB; export a shorter recording.';return;}
+ const passphrase=document.getElementById('passphrase');
+ if(!file){out.textContent='Select an ESP32 .kbx or .csv file first.';return;}
+ const isKbx=/\.kbx$/i.test(file.name);
+ if(isKbx){
+  if(file.size>KBX_MAX){out.textContent='File exceeds 3.5 MiB; export a shorter session.';return;}
+  if(!passphrase.value){out.textContent='Enter the passphrase for this .kbx file.';return;}
+ }else if(file.size>CSV_MAX){out.textContent='File exceeds 5 MiB; export a shorter recording.';return;}
  if(predict&&!confirm('Research output only, not clinical approval. Continue?'))return;
  document.getElementById('review').disabled=document.getElementById('predict').disabled=true;
  try{
   out.textContent='Processing locally…';
+  const body=isKbx
+   ?{kbx:toBase64(await file.arrayBuffer()),passphrase:passphrase.value,predict}
+   :{csv:await file.text(),sample_rate_hz:Number(document.getElementById('rate').value),predict};
   const response=await fetch('/api/review',{method:'POST',headers:{'Content-Type':'application/json'},
-   body:JSON.stringify({csv:await file.text(),sample_rate_hz:Number(document.getElementById('rate').value),predict})});
+   body:JSON.stringify(body)});
   out.textContent=JSON.stringify(await response.json(),null,2);
  }catch(error){out.textContent='Request failed: '+error.message;}
- finally{document.getElementById('review').disabled=document.getElementById('predict').disabled=false;}
+ finally{
+  if(isKbx)passphrase.value='';
+  document.getElementById('review').disabled=document.getElementById('predict').disabled=false;
+ }
 }
 document.getElementById('review').onclick=()=>submit(false);
 document.getElementById('predict').onclick=()=>submit(true);
-</script></html>""".replace("SCHEMA_JSON", json.dumps(",".join(CSV_COLUMNS))).replace("LIMITATIONS_JSON", json.dumps(LIMITATIONS))
+</script></html>""".replace("SCHEMA_JSON", json.dumps(",".join(CSV_COLUMNS))).replace("LIMITATIONS_JSON", json.dumps(LIMITATIONS)).replace("KBX_MAX_BYTES", str(MAX_KBX_BYTES))
 
 
 class ReviewHandler(BaseHTTPRequestHandler):
