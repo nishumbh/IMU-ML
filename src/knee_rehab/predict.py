@@ -6,6 +6,12 @@ Run: python -m knee_rehab.predict --model-dir artifacts --manifest manifest.json
 Load only trusted model directories: joblib artifacts can execute Python code.
 Manifests use the existing loader schema (including a label, which is ignored for
 prediction). No estimator, scaler, threshold, or preprocessing setting is fitted.
+
+Encrypted ESP32 session logs can be used directly: a manifest record with
+"format": "kbx" and "passphrase_env": "<ENV_VAR_NAME>" is decrypted by data_loader
+through secure_log (the passphrase is read from that environment variable and is
+never stored in the manifest). Truncated files are used up to the last complete
+chunk; the record metadata then has kbx_truncated = true.
 """
 from __future__ import annotations
 

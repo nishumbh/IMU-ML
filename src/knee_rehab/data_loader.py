@@ -3,11 +3,16 @@
 A manifest describes one constant-label, single-subject segment per record.
 NPY files must be numeric 2-D arrays (never enable pickle for downloaded data).
 CSV channel names/indices, units and sampling rates are explicit. See configs/.
+KBX1 encrypted session logs (format "kbx") are decrypted through secure_log; the
+manifest names an environment variable holding the passphrase (`passphrase_env`),
+never the passphrase itself. See docs/SD_LOG_FORMAT.md.
 """
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+import io
 import json
+import os
 from pathlib import Path
 from typing import Any, Mapping
 
@@ -57,7 +62,8 @@ def _column(table: np.ndarray | pd.DataFrame, column: Any) -> np.ndarray:
         raise ValueError(f"column {column!r} must be numeric") from exc
 
 
-def _load_table(spec: Mapping[str, Any], path: Path) -> np.ndarray | pd.DataFrame:
+def _load_table(spec: Mapping[str, Any], path: Path) -> tuple[np.ndarray | pd.DataFrame, dict[str, Any]]:
+    """Return the table and any format-specific metadata (e.g. kbx truncation)."""
     fmt = spec.get("format", path.suffix.lstrip(".").lower())
     if fmt == "npy":
         table = np.load(path, mmap_mode="r", allow_pickle=False)
@@ -66,13 +72,35 @@ def _load_table(spec: Mapping[str, Any], path: Path) -> np.ndarray | pd.DataFram
         axis = spec.get("time_axis", 0)
         if isinstance(axis, bool) or axis not in (0, 1):
             raise ValueError("time_axis must be 0 or 1")
-        return table if axis == 0 else table.T
+        return (table if axis == 0 else table.T), {}
     if fmt == "csv":
         options = spec.get("csv_options", {})
         if not isinstance(options, dict) or set(options) - {"sep", "header", "skiprows", "encoding"}:
             raise ValueError("csv_options supports only sep, header, skiprows, encoding")
-        return pd.read_csv(path, **options)
-    raise ValueError(f"Unsupported format {fmt!r}; expected npy or csv")
+        return pd.read_csv(path, **options), {}
+    if fmt == "kbx":
+        return _load_kbx(spec, path)
+    raise ValueError(f"Unsupported format {fmt!r}; expected npy, csv or kbx")
+
+
+def _load_kbx(spec: Mapping[str, Any], path: Path) -> tuple[pd.DataFrame, dict[str, Any]]:
+    # Imported here so the loader does not need cryptography for npy/csv manifests.
+    from .secure_log import read_kbx, session_to_csv
+
+    env_name = spec.get("passphrase_env")
+    if not isinstance(env_name, str) or not env_name.strip():
+        raise ValueError("kbx records need passphrase_env (the name of an environment variable); "
+                         "never put a passphrase in a manifest")
+    passphrase = os.environ.get(env_name)
+    if passphrase is None:
+        raise ValueError(f"Environment variable {env_name} is not set; it must hold the kbx passphrase")
+    session = read_kbx(path, passphrase)
+    if not session.verified:
+        raise ValueError("kbx file has no authenticated chunks, so the passphrase cannot be verified")
+    table = pd.read_csv(io.StringIO(session_to_csv(session)))
+    return table, {"kbx_truncated": session.truncated,
+                   "kbx_link_loss_samples": session.link_loss_samples,
+                   "kbx_session_number": session.header.session_number}
 
 
 def load_recording(spec: Mapping[str, Any], base_dir: str | Path = ".") -> Recording:
@@ -90,7 +118,7 @@ def load_recording(spec: Mapping[str, Any], base_dir: str | Path = ".") -> Recor
     fs = float(spec["sample_rate_hz"])
     if not np.isfinite(fs) or fs <= 0:
         raise ValueError("sample_rate_hz must be positive and finite")
-    table = _load_table(spec, path)
+    table, format_metadata = _load_table(spec, path)
     start = _index(spec.get("sample_start", 0), "sample_start")
     stop = _index(spec.get("sample_stop", len(table)), "sample_stop")
     if not 0 <= start < stop <= len(table):
@@ -137,6 +165,7 @@ def load_recording(spec: Mapping[str, Any], base_dir: str | Path = ".") -> Recor
         if np.any(np.abs(np.diff(t) * fs - 1) > tolerance):
             raise ValueError("Irregular timestamps or incorrect sample rate; regrid explicitly before ingestion")
     metadata = dict(spec.get("metadata", {}))
+    metadata.update(format_metadata)
     metadata.update({"sample_start": start, "sample_stop": stop, "channel_kinds": kinds,
                      "units": ["m/s^2" if k == "accelerometer" else "rad/s" for k in kinds]})
     return Recording(np.column_stack(arrays), tuple(names), subject, dataset, label,
