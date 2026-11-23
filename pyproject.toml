@@ -12,6 +12,7 @@ dynamic = ["dependencies"]
 [project.optional-dependencies]
 train = ["tensorflow>=2.16,<2.22"]
 dev = ["pytest>=8,<10"]
+edge = ["emlearn>=0.23,<1"]
 
 [tool.setuptools.dynamic]
 dependencies = {file = ["requirements.txt"]}
